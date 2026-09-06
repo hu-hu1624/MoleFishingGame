@@ -1,0 +1,62 @@
+import sys
+from PyQt6 import QtCore, QtGui, QtWidgets
+import objc
+from Cocoa import NSApp
+
+def enable_mac_click_through(win_id):
+    """使用安全的 PyObjC 接口啟用滑鼠穿透"""
+    try:
+        # 從目前 App 中找出對應此 win_id 的 NSWindow
+        for window in NSApp.windows():
+            if window.isVisible():
+                window.setLevel_(1000)
+                window.setIgnoresMouseEvents_(True)
+        print("[OK] macOS 滑鼠穿透已套用至頂層視窗！")
+    except Exception as e:
+        print(f"[Warn] 設定失敗: {e}")
+
+class TransparentOverlay(QtWidgets.QWidget):
+    def __init__(self, x=100, y=100, w=600, h=400):
+        super().__init__()
+
+        # 1. 視窗定位與大小（後續對齊你的遊戲視窗）
+        self.setGeometry(x, y, w, h)
+
+        # 2. 視窗旗標：無邊框 + 永遠置頂 + 工具視窗（避免在 Dock 搶焦點）
+        self.setWindowFlags(
+            QtCore.Qt.WindowType.FramelessWindowHint |
+            QtCore.Qt.WindowType.WindowStaysOnTopHint 
+        )
+
+        # 3. 背景透明
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground, True)
+
+        # 4. 滑鼠點擊穿透（Click-through）核心！
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        
+
+    def paintEvent(self, event):
+        """在這裡畫出邊框"""
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+
+        # 畫半透明紅色外框（讓你知道覆蓋範圍在哪裡）
+        pen_box = QtGui.QPen(QtGui.QColor(255, 0, 0, 180))
+        pen_box.setWidth(3)
+        painter.setPen(pen_box)
+        painter.drawRect(0, 0, self.width(), self.height())
+
+        # 畫測試提示文字
+        painter.setFont(QtGui.QFont("Arial", 14, QtGui.QFont.Weight.Bold))
+        painter.setPen(QtGui.QColor(255, 255, 255, 200))
+        painter.drawText(20, 40, "I'm so beautiful.")
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    overlay = TransparentOverlay(x=200, y=200, w=600, h=400)
+    overlay.show()
+    overlay.raise_()
+
+    enable_mac_click_through(overlay.winId())
+
+    sys.exit(app.exec())
