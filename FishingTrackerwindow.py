@@ -1,6 +1,6 @@
 import time
 import cv2
-import mss
+import mss   #截圖套件
 import numpy as np
 from ultralytics import YOLO
 import pyautogui
@@ -33,7 +33,7 @@ GAME_H = y2 -y1
 
 window_name = "FISH TRACKER"
 cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-cv2.resizeWindow(window_name, 640, 360)
+cv2.resizeWindow(window_name, GAME_W, GAME_H)
 cv2.moveWindow(window_name, screen_w - 660, screen_h - 420)
 
 # 轉為截圖像素座標
@@ -48,15 +48,12 @@ capture_region = {
 # 1. 載入模型
 model = YOLO('best.pt')
 
-
 # 2. 參數設定
-CONFIDENCE_THRESHOLD = 0.5  # 信心門檻 (可依畫面微調，如 0.35 ~ 0.5)
+CONFIDENCE_THRSHOLD = 0.5  # 信心門檻 (可依畫面微調，如 0.35 ~ 0.5)
 
 print("=== 魚群純視覺追蹤視窗啟動 ===")
 print("請將視窗移至一旁觀賞。按鍵盤上的 'q' 鍵可退出。\n")
 
-cv2.namedWindow("FISH TRACKER", cv2.WINDOW_NORMAL)
-cv2.resizeWindow("FISH TRACKER", 1024, 576)
 
 prev_time = time.time()
 
@@ -70,7 +67,7 @@ with mss.mss() as sct:
             frame = cv2.cvtColor(np.array(screenshot), cv2.COLOR_BGRA2BGR)
 
             # 2. YOLO 模型推論
-            results = model.predict(source=frame, conf=CONFIDENCE_THRESHOLD, verbose=False)
+            results = model.predict(source=frame, conf=CONFIDENCE_THRSHOLD, verbose=False)
 
             fish_count = 0
 
